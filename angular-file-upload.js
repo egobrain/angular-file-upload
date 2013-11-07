@@ -27,6 +27,8 @@ app.directive('ngFileDrop', function () {
     return {
         // don't use drag-n-drop files in IE9, because not File API support
         link: !window.File ? angular.noop : function (scope, element, attributes) {
+            var channel = (scope.$eval( attributes.ngFileDrop ) || {}).channel ||  '';
+
             element
                 .bind('drop', function (event) {
                     var dataTransfer = event.dataTransfer ?
@@ -35,8 +37,8 @@ app.directive('ngFileDrop', function () {
 
                     event.preventDefault();
                     event.stopPropagation();
-                    scope.$broadcast('file:removeoverclass');
-                    scope.$emit('file:add', dataTransfer.files, scope.$eval(attributes.ngFileDrop));
+                    scope.$broadcast('file:removeoverclass' + channel);
+                    scope.$emit('file:add'+channel, dataTransfer.files, scope.$eval(attributes.ngFileDrop));
                 })
                 .bind('dragover', function (event) {
                     var dataTransfer = event.dataTransfer ?
@@ -46,10 +48,10 @@ app.directive('ngFileDrop', function () {
                     event.preventDefault();
                     event.stopPropagation();
                     dataTransfer.dropEffect = 'copy';
-                    scope.$broadcast('file:addoverclass');
+                    scope.$broadcast('file:addoverclass'+channel);
                 })
                 .bind('dragleave', function () {
-                    scope.$broadcast('file:removeoverclass');
+                    scope.$broadcast('file:removeoverclass'+channel);
                 });
         }
     };
@@ -66,11 +68,15 @@ app.directive('ngFileOver', function () {
 
     return {
         link: function (scope, element, attributes) {
-            scope.$on('file:addoverclass', function () {
-                element.addClass(attributes.ngFileOver || 'ng-file-over');
+            var options = scope.$eval( attributes.ngFileOver ) || {};
+            var channel = options.channel ||  '';
+            var clazz = options.clazz || 'ng-file-over';
+
+            scope.$on('file:addoverclass' + channel, function () {
+                element.addClass( clazz );
             });
-            scope.$on('file:removeoverclass', function () {
-                element.removeClass(attributes.ngFileOver || 'ng-file-over');
+            scope.$on('file:removeoverclass' + channel, function () {
+                element.removeClass( clazz );
             });
         }
     };
@@ -87,12 +93,14 @@ app.directive('ngFileSelect', function () {
 
     return {
         link: function (scope, element, attributes) {
+            var channel = (scope.$eval( attributes.ngFileSelect ) || {}).channel ||  '';
+
             if (!window.File || !window.FormData) {
                 element.removeAttr('multiple');
             }
 
             element.bind('change', function () {
-                scope.$emit('file:add', this.files ? this.files : this, scope.$eval(attributes.ngFileSelect));
+                scope.$emit('file:add' + channel, this.files ? this.files : this, scope.$eval(attributes.ngFileSelect));
                 window.File && element.prop('value', null);
             });
         }
@@ -129,7 +137,7 @@ app.factory('$fileUploader', [ '$compile', '$rootScope', '$http', function ($com
         // add the base filter
         this.filters.unshift(this._filter);
 
-        $rootScope.$on('file:add', function (event, items, options) {
+        $rootScope.$on('file:add' + (this.channel || ''), function (event, items, options) {
             event.stopPropagation();
             this.addToQueue(items, options);
         }.bind(this));

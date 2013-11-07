@@ -1,7 +1,7 @@
 angular.module('app', ['angularFileUpload'])
 
     // The example of the full functionality
-    .controller('TestController', function ($scope, $fileUploader) {
+    .controller('TestController1', function ($scope, $fileUploader) {
         'use strict';
 
         // create a uploader with options
@@ -16,7 +16,8 @@ angular.module('app', ['angularFileUpload'])
                     console.info('filter1');
                     return true;
                 }
-            ]
+            ],
+            channel: ':test'
         });
 
         // ADDING FILTER
@@ -67,5 +68,28 @@ angular.module('app', ['angularFileUpload'])
         uploader.bind('completeall', function (event, items) {
             console.info('All files are transferred', items);
         });
+
+    })
+
+
+    .controller('TestController2', function ($scope, $fileUploader) {
+        'use strict';
+
+        // create a uploader with options
+        var uploader = $scope.uploader = $fileUploader.create({
+            scope: $scope,                          // to automatically update the html. Default: $rootScope
+            url: '/examples/upload.php',
+            formData: [
+                { key: 'value' }
+            ],
+            filters: [
+                function (item) {                    // first user filter
+                    console.info('filter1');
+                    return true;
+                }
+            ],
+            channel: ':test2'
+        });
+
 
     });
